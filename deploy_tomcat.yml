@@ -1,43 +1,39 @@
 ---
 - hosts: websever
   become: yes
+
   vars:
-    build_number: '{{ BUILD_NUMBER }}'
-  #become_user: tomcat
+    build_number: "{{ BUILD_NUMBER }}"
+
   tasks:
 
-  - name: create directory 
-    file:
-      path: /home/ubuntu/sourcefile
-      state: directory
-      mode: 0777
+    - name: create backup directory
+      file:
+        path: /home/ubuntu/backup
+        state: directory
+        mode: 0777
 
-  - name: download war file
-    ansible.builtin.get_url:
-      url: "{{ url_artifact }}"
-      dest: /home/ubuntu/sourcefile/webapp.war
-      username: test
-      password: Test@12345
+    - name: check if existing war exists
+      stat:
+        path: /opt/tomcat/webapps/webappnew.war
+      register: war_file
 
-  - name: create directory for backup
-    file: 
-      path: /home/ubuntu/backup
-      state: directory
-      mode: 0777
+    - name: backup existing war
+      copy:
+        src: /opt/tomcat/webapps/webappnew.war
+        dest: /home/ubuntu/backup/webappnew.war
+        remote_src: yes
+      when: war_file.stat.exists
 
-  - name: backup file with owner and permissions
-    copy:
-      src: /opt/tomcat/webapps/webappnew.war
-      dest: /home/ubuntu/backup/webappnew.war
-      remote_src: yes
+    - name: download new war directly to tomcat
+      ansible.builtin.get_url:
+        url: "{{ url_artifact }}"
+        dest: /opt/tomcat/webapps/webappnew.war
+        username: "{{ jfrog_user }}"
+        password: "{{ jfrog_pass }}"
+        mode: 0644
 
-  - name: Delete remote war file
-    file:
-      path: /opt/tomcat/webapps/webappnew.war
-      state: absent
-
-  - name: deploy file with owner and permissions
-    copy:
-      src: /home/ubuntu/sourcefile/webapp.war
-      dest: /opt/tomcat/webapps/webappnew.war
-      remote_src: yes
+    - name: restart tomcat
+      service:
+        name: tomcat
+        state: restarted
