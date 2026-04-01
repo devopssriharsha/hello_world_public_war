@@ -29,8 +29,8 @@
       ansible.builtin.get_url:
         url: "{{ url_artifact }}"
         dest: /opt/tomcat/webapps/webappnew.war
-        username: "{{ jfrog_user }}"
-        password: "{{ jfrog_pass }}"
+        username: test
+        password: Test@12345
         mode: 0644
 
     - name: restart tomcat
