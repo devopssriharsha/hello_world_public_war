@@ -10,10 +10,22 @@
         username: "{{ jfrog_user }}"
         password: "{{ jfrog_pass }}"
 
-    - name: pull an image
+    - name: Stop existing container if running
       docker_container:
         name: myapp
-        image: "{{ image }}"   # ✅ THIS IS THE FIX
+        state: stopped
+      ignore_errors: yes
+
+    - name: Remove existing container
+      docker_container:
+        name: myapp
+        state: absent
+      ignore_errors: yes
+
+    - name: Run new container
+      docker_container:
+        name: myapp
+        image: "{{ image }}"
         state: started
         recreate: yes
         ports:
