@@ -1,20 +1,20 @@
----
-- hosts: websever
-  become: yes
-  vars:
-    build_number: '{{ BUILD_NUMBER }}'
-  tasks:
-      
-    - name: login to jfrog
-      shell: docker login -u siddeshg672@gmail.com -p Siddesh@123456 hiqodenew.jfrog.io  
-    
-    - name: pull an image
-      shell: docker pull hiqodenew.jfrog.io/sample-war-app/sample_docker_image_with_war_deploy:v1.0-{{ build_number }}
+- name: Deploy Docker Container
+  hosts: websever
+  become: true
 
-    - name: remove container
-      shell: docker rm -f devopsAppDeploy
-        
-    - name: create a application container
-      shell: docker run -id --name devopsAppDeploy -p 8111:8080 hiqodenew.jfrog.io/sample-war-app/sample_docker_image_with_war_deploy:v1.0-{{ build_number }}
- 
-   
+  tasks:
+
+    - name: login to jfrog
+      docker_login:
+        registry_url: trialtypobk.jfrog.io
+        username: "{{ jfrog_user }}"
+        password: "{{ jfrog_pass }}"
+
+    - name: pull an image
+      docker_container:
+        name: myapp
+        image: "{{ image }}"   # ✅ THIS IS THE FIX
+        state: started
+        recreate: yes
+        ports:
+          - "8080:8080"
