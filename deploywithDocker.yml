@@ -4,24 +4,27 @@
 
   tasks:
 
-    - name: login to jfrog
+    - name: Login to JFrog
       docker_login:
         registry_url: trialtypobk.jfrog.io
         username: "{{ jfrog_user }}"
         password: "{{ jfrog_pass }}"
 
-    - name: Stop existing container if running
-      docker_container:
-        name: myapp
-        state: stopped
+    # 🔥 Kill ANY container using port 8080
+    - name: Kill containers using port 8080
+      shell: |
+        docker ps -q --filter "publish=8080" | xargs -r docker stop
+        docker ps -a -q --filter "publish=8080" | xargs -r docker rm
       ignore_errors: yes
 
-    - name: Remove existing container
+    # 🔥 Remove container by name also (safety)
+    - name: Remove existing myapp container if exists
       docker_container:
         name: myapp
         state: absent
       ignore_errors: yes
 
+    # 🔥 Run new container
     - name: Run new container
       docker_container:
         name: myapp
